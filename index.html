@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MTCC Inventory Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="cat-chemicals">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Inventory System</div>
+      <div class="logo-title"><span>MTCC</span> Dashboard</div>
+    </div>
+    <div class="nav-label">Categories</div>
+    <div id="nav"></div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+    <div class="topbar">
+      <div class="breadcrumb" id="breadcrumb">
+        <span>Select a category</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" id="settingsBtn">⚙ Settings</button>
+        <button class="btn btn-primary" id="addBtn" style="display:none">＋ Add Item</button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="welcome">
+        <div class="welcome-icon">📦</div>
+        <h2>MTCC Inventory Dashboard</h2>
+        <p>Select a category and subcategory from the sidebar to view and manage inventory.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Toast Container ── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ── Add / Edit Item Modal ── -->
+  <div class="modal-overlay" id="itemModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Add Item</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="form-grid" id="modalForm"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="modalSave" onclick="saveItem()">Save Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Confirm Delete Modal ── -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal confirm-modal">
+      <div class="modal-header">
+        <div class="modal-title">Delete Item</div>
+        <button class="modal-close" onclick="closeConfirm()">✕</button>
+      </div>
+      <div class="confirm-msg">
+        Are you sure you want to delete <strong id="deleteItemName"></strong>?
+        This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings Modal ── -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <div class="modal-title">⚙ Settings — JsonBIN</div>
+        <button class="modal-close" onclick="closeSettings()">✕</button>
+      </div>
+
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7">
+        Create a free account at
+        <a href="https://jsonbin.io" target="_blank" style="color:var(--active)">jsonbin.io</a>,
+        then create a new Bin. The Bin must start with valid JSON — use the button below to copy
+        the required initial structure, paste it into your Bin, then save. Then copy your
+        <strong style="color:var(--text)">Master Key</strong> (API Keys page) and
+        <strong style="color:var(--text)">Bin ID</strong> (from the Bin URL) into the fields below.
+      </p>
+
+      <details style="margin-bottom:18px">
+        <summary style="font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;letter-spacing:.05em;user-select:none">
+          ▶ Show initial JsonBIN content to paste
+        </summary>
+        <pre id="initialJsonPreview" style="
+          margin-top:10px;font-family:var(--mono);font-size:10.5px;
+          background:var(--surface2);border:1px solid var(--border);
+          border-radius:8px;padding:12px;color:var(--muted);
+          overflow-x:auto;white-space:pre;line-height:1.5;
+          max-height:200px;overflow-y:auto
+        "></pre>
+        <button class="btn btn-ghost" onclick="copyInitialJson()"
+          style="margin-top:8px;font-size:12px;padding:5px 12px">
+          📋 Copy JSON
+        </button>
+      </details>
+
+      <div class="settings-row">
+        <label>Master Key</label>
+        <input class="form-input" id="cfg-key" type="password" placeholder="$2a$10$…" />
+      </div>
+      <div class="settings-row">
+        <label>Bin ID</label>
+        <input class="form-input" id="cfg-bin" placeholder="6650a…" />
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSettings()">Save &amp; Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Populate the initial JSON preview once app.js is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const preview = document.getElementById('initialJsonPreview');
+      if (preview && typeof buildEmpty === 'function') {
+        preview.textContent = JSON.stringify(buildEmpty(), null, 2);
+      }
+    });
+
+    function copyInitialJson() {
+      const text = document.getElementById('initialJsonPreview').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Initial JSON copied to clipboard!', 'success');
+      });
+    }
+  </script>
+</body>
+</html>
