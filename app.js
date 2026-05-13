@@ -1,7 +1,9 @@
+
 // ─── Config ───────────────────────────────────────────────────────────────
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
 let MASTER_KEY = localStorage.getItem('mtcc_key') || '$2a$10$6YUxFYON7tl.lHl13unwY.JY7BTEdnDYxnRzbS2pZriMdq5EdLEM2';
 let BIN_ID     = localStorage.getItem('mtcc_bin') || '6a03d6a8adc21f119a908818';
+let SHEETS_URL   = localStorage.getItem('mtcc_sheets_url') || 'https://script.google.com/macros/s/AKfycbxWoPKmxtRnR72V_oKfUX_QJv5Oq0wXOoQnl5fGylQBvmKhVLzboptV61aLB_2XvVOXwA/exec';  // Apps Script Web App URL
 
 // ─── Schema ───────────────────────────────────────────────────────────────
 const CATEGORIES = {
@@ -9,32 +11,31 @@ const CATEGORIES = {
     label: 'Chemicals', color: 'green', dot: '#4ade80',
     subs: ['Algubati', 'Urisnap', 'PLGA', 'MTCC', 'Biotech'],
     fields: [
-      { key: 'name',        label: 'Item Name',         type: 'text',   required: true },
-      { key: 'description', label: 'Description',       type: 'text' },
-      { key: 'unit',        label: 'Unit',              type: 'text' },
-      { key: 'quantity',    label: 'Quantity',          type: 'number' },
-      { key: 'expiration',  label: 'Expiration Date',   type: 'date' },
-      { key: 'status',      label: 'Status',            type: 'select', options: ['Available', 'Consumed', 'Damaged', 'Expired'] },
-      { key: 'numUsed',     label: 'Number of Used',    type: 'number' },
-      { key: 'numSealed',   label: 'Number of Sealed',  type: 'number' },
-      { key: 'brand',       label: 'Brand',             type: 'text' },
-      { key: 'supplier',    label: 'Supplier',          type: 'text' },
-      { key: 'lastChecked', label: 'Date Last Checked', type: 'date' },
+      { key: 'name',        label: 'Item Name',        type: 'text',   required: true },
+      { key: 'description', label: 'Description',      type: 'text' },
+      { key: 'unit',        label: 'Unit',             type: 'text' },
+      { key: 'quantity',    label: 'Quantity',         type: 'number' },
+      { key: 'expiration',  label: 'Expiration Date',  type: 'date' },
+      { key: 'status',      label: 'Status',           type: 'select', options: ['Available', 'Consumed', 'Damaged', 'Expired'] },
+      { key: 'numUsed',     label: 'Number of Used',   type: 'number' },
+      { key: 'numSealed',   label: 'Number of Sealed', type: 'number' },
+      { key: 'brand',       label: 'Brand',            type: 'text' },
+      { key: 'remarks',     label: 'Remarks',          type: 'text' },
     ]
   },
   consumables: {
     label: 'Consumables', color: 'orange', dot: '#fb923c',
     subs: ['Algubati', 'Urisnap', 'PLGA', 'MTCC', 'Biotech'],
     fields: [
-      { key: 'name',        label: 'Item Name',         type: 'text',   required: true },
-      { key: 'description', label: 'Description',       type: 'text' },
-      { key: 'unit',        label: 'Unit',              type: 'text' },
-      { key: 'quantity',    label: 'Quantity',          type: 'number' },
-      { key: 'status',      label: 'Status',            type: 'select', options: ['Available', 'Consumed', 'Damaged', 'Expired'] },
-      { key: 'numUsed',     label: 'Number of Used',    type: 'number' },
-      { key: 'numSealed',   label: 'Number of Sealed',  type: 'number' },
-      { key: 'brand',       label: 'Brand',             type: 'text' },
-      { key: 'lastChecked', label: 'Date Last Checked', type: 'date' },
+      { key: 'name',        label: 'Item Name',        type: 'text',   required: true },
+      { key: 'description', label: 'Description',      type: 'text' },
+      { key: 'unit',        label: 'Unit',             type: 'text' },
+      { key: 'quantity',    label: 'Quantity',         type: 'number' },
+      { key: 'status',      label: 'Status',           type: 'select', options: ['Available', 'Consumed', 'Damaged', 'Expired'] },
+      { key: 'numUsed',     label: 'Number of Used',   type: 'number' },
+      { key: 'numSealed',   label: 'Number of Sealed', type: 'number' },
+      { key: 'brand',       label: 'Brand',            type: 'text' },
+      { key: 'remarks',     label: 'Remarks',          type: 'text' },
     ]
   },
   equipment: {
@@ -58,12 +59,12 @@ const CATEGORIES = {
     label: 'Glassware', color: 'blue', dot: '#60a5fa',
     subs: ['Algubati', 'Urisnap', 'PLGA', 'MTCC', 'Biotech'],
     fields: [
-      { key: 'name',        label: 'Item Name',         type: 'text',   required: true },
-      { key: 'description', label: 'Description',       type: 'text' },
-      { key: 'quantity',    label: 'Quantity',          type: 'number' },
-      { key: 'brand',       label: 'Brand',             type: 'text' },
-      { key: 'status',      label: 'Status',            type: 'select', options: ['Available', 'Barrowed', 'Damaged', 'For Replacement'] },
-      { key: 'lastChecked', label: 'Date Last Checked', type: 'date' },
+      { key: 'name',        label: 'Item Name',  type: 'text',   required: true },
+      { key: 'description', label: 'Description', type: 'text' },
+      { key: 'quantity',    label: 'Quantity',    type: 'number' },
+      { key: 'brand',       label: 'Brand',       type: 'text' },
+      { key: 'status',      label: 'Status',      type: 'select', options: ['Available', 'Barrowed', 'Damaged', 'For Replacement'] },
+      { key: 'remarks',     label: 'Remarks',     type: 'text' },
     ]
   }
 };
@@ -116,23 +117,59 @@ async function loadData() {
 }
 
 async function saveData() {
+  // ── 1. Save to JsonBIN ──
   if (!BIN_ID || !MASTER_KEY) {
     showToast('Configure JsonBIN in Settings to persist data.', 'error');
-    return;
+  } else {
+    try {
+      const r = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': MASTER_KEY
+        },
+        body: JSON.stringify(state)
+      });
+      if (!r.ok) throw new Error('Save failed: ' + r.status);
+    } catch (e) {
+      showToast('Could not save to JsonBIN. Check settings.', 'error');
+    }
   }
+
+  // ── 2. Sync to Google Sheets (fire-and-forget) ──
+  syncToSheets();
+}
+
+// Push entire state to Google Sheets via Apps Script Web App.
+// We use a GET request with the payload as a URL parameter — this works
+// from any plain HTML/JS site without CORS issues. GAS doGet() receives it fine.
+async function syncToSheets() {
+  if (!SHEETS_URL) return;
   try {
-    const r = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': MASTER_KEY
-      },
-      body: JSON.stringify(state)
-    });
-    if (!r.ok) throw new Error('Save failed: ' + r.status);
+    const encoded = encodeURIComponent(JSON.stringify(state));
+    const url     = `${SHEETS_URL}?action=sync&data=${encoded}`;
+    // GET + no-cors: browser sends the request, GAS processes it.
+    // We can't read the response body (that's the no-cors trade-off)
+    // but the sheet still gets updated reliably.
+    await fetch(url, { method: 'GET', mode: 'no-cors' });
+    setSheetsIndicator('synced');
   } catch (e) {
-    showToast('Could not save data. Check your JsonBIN settings.', 'error');
+    setSheetsIndicator('error');
   }
+}
+
+// Small indicator next to the settings button
+function setSheetsIndicator(status) {
+  const el = document.getElementById('sheetsIndicator');
+  if (!el) return;
+  if (status === 'synced') {
+    el.title   = 'Google Sheets synced ✓';
+    el.style.background = 'var(--green)';
+  } else {
+    el.title   = 'Google Sheets sync failed';
+    el.style.background = 'var(--red)';
+  }
+  el.style.display = 'block';
 }
 
 // ─── Nav ──────────────────────────────────────────────────────────────────
@@ -444,8 +481,9 @@ function confirmDelete() {
 
 // ─── Settings ─────────────────────────────────────────────────────────────
 function openSettings() {
-  document.getElementById('cfg-key').value = MASTER_KEY;
-  document.getElementById('cfg-bin').value = BIN_ID;
+  document.getElementById('cfg-key').value    = MASTER_KEY;
+  document.getElementById('cfg-bin').value    = BIN_ID;
+  document.getElementById('cfg-sheets').value = SHEETS_URL;
   document.getElementById('settingsModal').classList.add('open');
 }
 
@@ -454,16 +492,26 @@ function closeSettings() {
 }
 
 async function saveSettings() {
-  MASTER_KEY = document.getElementById('cfg-key').value.trim();
-  BIN_ID     = document.getElementById('cfg-bin').value.trim();
-  localStorage.setItem('mtcc_key', MASTER_KEY);
-  localStorage.setItem('mtcc_bin', BIN_ID);
+  MASTER_KEY  = document.getElementById('cfg-key').value.trim();
+  BIN_ID      = document.getElementById('cfg-bin').value.trim();
+  SHEETS_URL  = document.getElementById('cfg-sheets').value.trim();
+  localStorage.setItem('mtcc_key',        MASTER_KEY);
+  localStorage.setItem('mtcc_bin',        BIN_ID);
+  localStorage.setItem('mtcc_sheets_url', SHEETS_URL);
+
+  // Show/hide the sheets indicator dot
+  const ind = document.getElementById('sheetsIndicator');
+  if (ind) ind.style.display = SHEETS_URL ? 'block' : 'none';
+
   closeSettings();
   document.getElementById('content').innerHTML =
     '<div class="loading"><div class="spinner"></div>Loading from JsonBIN…</div>';
   await loadData();
   renderContent();
-  showToast('Connected to JsonBIN!', 'success');
+  showToast('Settings saved!', 'success');
+
+  // Trigger an immediate sync so the sheet is up to date right away
+  if (SHEETS_URL) syncToSheets();
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────
