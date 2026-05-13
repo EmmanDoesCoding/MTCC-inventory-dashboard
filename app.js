@@ -5,6 +5,7 @@ let MASTER_KEY = localStorage.getItem('mtcc_key') || '$2a$10$6YUxFYON7tl.lHl13un
 let BIN_ID     = localStorage.getItem('mtcc_bin') || '6a03d6a8adc21f119a908818';
 let SHEETS_URL   = localStorage.getItem('mtcc_sheets_url') || 'https://script.google.com/macros/s/AKfycbxWoPKmxtRnR72V_oKfUX_QJv5Oq0wXOoQnl5fGylQBvmKhVLzboptV61aLB_2XvVOXwA/exec';  // Apps Script Web App URL
 
+
 // ─── Schema ───────────────────────────────────────────────────────────────
 const CATEGORIES = {
   chemicals: {
@@ -39,7 +40,7 @@ const CATEGORIES = {
     ]
   },
   semiExpandable: {
-    label: 'Semi-Expandable', color: 'amber',  dot: '#f59e0b',
+    label: 'Semi-Expandable', color: 'amber',  dot: '#fde047',
     subs: ['Algubati', 'Urisnap', 'PLGA', 'MTCC', 'Biotech'],
     fields: [
       { key: 'name',        label: 'Item Name',           type: 'text',   required: true },
