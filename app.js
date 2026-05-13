@@ -38,9 +38,24 @@ const CATEGORIES = {
       { key: 'remarks',     label: 'Remarks',          type: 'text' },
     ]
   },
+  semiExpandable: {
+    label: 'Semi-Expandable', color: 'amber',  dot: '#f59e0b',
+    subs: ['Algubati', 'Urisnap', 'PLGA', 'MTCC', 'Biotech'],
+    fields: [
+      { key: 'name',        label: 'Item Name',           type: 'text',   required: true },
+      { key: 'description', label: 'Description',         type: 'text' },
+      { key: 'quantity',    label: 'Quantity',            type: 'number' },
+      { key: 'supplier',    label: 'Supplier',            type: 'text' },
+      { key: 'unitValue',   label: 'Unit Value (₱)',      type: 'number' },
+      { key: 'oldPropNum',  label: 'Old Property Number', type: 'text' },
+      { key: 'newPropNum',  label: 'New Property Number', type: 'text' },
+      { key: 'allocation',  label: 'Allocation',          type: 'text' },
+      { key: 'remarks',     label: 'Remarks',             type: 'text' },
+    ]
+  },
   equipment: {
     label: 'Equipment', color: 'purple', dot: '#a78bfa',
-    subs: ['MTCC'],
+    subs: ['MTCC', 'Urisnap'],
     fields: [
       { key: 'name',        label: 'Item Name',           type: 'text',   required: true },
       { key: 'description', label: 'Description',         type: 'text' },

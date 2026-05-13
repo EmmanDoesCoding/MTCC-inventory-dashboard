@@ -13,6 +13,9 @@
   --orange:    #fb923c;
   --orange-dim:#7c2d12;
   --orange-bg: #2c1506;
+  --amber:     #f59e0b;
+  --amber-dim: #78350f;
+  --amber-bg:  #2d1a00;
   --purple:    #a78bfa;
   --purple-dim:#4c1d95;
   --purple-bg: #1e0a3c;
@@ -41,7 +44,8 @@ body {
 body.cat-chemicals   { --active: var(--green);  --active-dim: var(--green-dim);  --active-bg: var(--green-bg);  }
 body.cat-consumables { --active: var(--orange); --active-dim: var(--orange-dim); --active-bg: var(--orange-bg); }
 body.cat-equipment   { --active: var(--purple); --active-dim: var(--purple-dim); --active-bg: var(--purple-bg); }
-body.cat-glassware   { --active: var(--blue);   --active-dim: var(--blue-dim);   --active-bg: var(--blue-bg);   }
+body.cat-glassware      { --active: var(--blue);   --active-dim: var(--blue-dim);   --active-bg: var(--blue-bg);   }
+body.cat-semiExpandable { --active: var(--amber);  --active-dim: var(--amber-dim);  --active-bg: var(--amber-bg);  }
 
 /* ── Sidebar ── */
 .sidebar {
