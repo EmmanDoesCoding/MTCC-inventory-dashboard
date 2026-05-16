@@ -247,22 +247,23 @@ tbody td {
   white-space: nowrap;
   vertical-align: middle;
 }
-/* Name and Description columns wrap and have a max width */
-tbody td:first-child {
+/* Item Name (frozen) and Description/Remarks wrap with fixed width */
+tbody td:first-child,
+thead th.frozen {
   white-space: normal;
   word-break: break-word;
-  max-width: 160px;
-  min-width: 100px;
-}
-thead th.frozen {
-  max-width: 160px;
-  min-width: 100px;
+  overflow-wrap: break-word;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
 }
 tbody td.wrap-col {
   white-space: normal;
   word-break: break-word;
+  overflow-wrap: break-word;
+  width: 220px;
+  min-width: 140px;
   max-width: 220px;
-  min-width: 120px;
 }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface2); }
