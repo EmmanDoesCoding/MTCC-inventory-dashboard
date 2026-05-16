@@ -705,18 +705,34 @@ function handleFile(file) {
         rows = parseCSV(e.target.result);
       } else {
         const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
-        // Try to find the right sheet — prefer one matching the current category/sub
-        const catLabel = CATEGORIES[currentCat].label.toLowerCase();
-        const subLabel = currentSub.toLowerCase();
-        let sheetName  = wb.SheetNames[0]; // default: first sheet
+        // Find the sheet that best matches BOTH current category AND subcategory.
+        // e.g. for Chemicals > Alugbati we want "Alugbati-Chemicals" not "Alugbati-Glasswares"
+        const catLabel  = CATEGORIES[currentCat].label.toLowerCase();
+        const subLabel  = currentSub.toLowerCase().replace(/[^a-z0-9]/g, '');
+        // Category keywords to match (chemicals, consumables, glass, equip, semi, calib, chem)
+        const catWords  = catLabel.replace('semi-expandable','semi').replace('chemeng donation','chemeng')
+                            .split(/[^a-z]+/).filter(w => w.length > 3);
+ 
+        let bestSheet = wb.SheetNames[0];
+        let bestScore = -1;
         for (const sn of wb.SheetNames) {
-          const snl = sn.toLowerCase();
-          if (snl.includes(subLabel) && snl.includes(catLabel.substring(0, 4))) {
-            sheetName = sn; break;
-          }
-          if (snl.includes(subLabel)) { sheetName = sn; break; }
+          const snl = sn.toLowerCase().replace(/[^a-z0-9]/g, '');
+          let score = 0;
+          // +2 if subcategory name appears in sheet name
+          if (snl.includes(subLabel)) score += 2;
+          // +2 for each category keyword found in sheet name
+          catWords.forEach(w => { if (snl.includes(w.substring(0,5))) score += 2; });
+          // Prefer exact matches
+          if (score > bestScore) { bestScore = score; bestSheet = sn; }
         }
-        const ws = wb.Sheets[sheetName];
+        console.log('[Import] sheet scores:', wb.SheetNames.map(sn => {
+          const snl = sn.toLowerCase().replace(/[^a-z0-9]/g,'');
+          let s = 0;
+          if (snl.includes(subLabel)) s+=2;
+          catWords.forEach(w => { if(snl.includes(w.substring(0,5))) s+=2; });
+          return sn + ':' + s;
+        }), '→ picked:', bestSheet);
+        const ws = wb.Sheets[bestSheet];
         rows = parseSheetWithHeaderDetection(ws);
       }
       if (!rows.length) {
