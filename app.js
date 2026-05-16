@@ -245,29 +245,67 @@ function setSheetsIndicator(status) {
   el.style.display = 'block';
 }
  
+// ─── Category icons ───────────────────────────────────────────────────────
+const CAT_ICONS = {
+  chemicals:       'ti-flask',
+  consumables:     'ti-package',
+  semiExpandable:  'ti-box',
+  equipment:       'ti-tool',
+  calibrators:     'ti-adjustments-horizontal',
+  chemEngDonation: 'ti-heart-handshake',
+  glassware:       'ti-glass',
+};
+ 
 // ─── Nav ──────────────────────────────────────────────────────────────────
 function renderNav() {
   const nav = document.getElementById('nav');
   nav.innerHTML = '';
+ 
   for (const [catKey, cat] of Object.entries(CATEGORIES)) {
-    const isOpen = currentCat === catKey;
+    const isOpen     = currentCat === catKey;
+    const icon       = CAT_ICONS[catKey] || 'ti-folder';
+    const totalItems = cat.subs.reduce((sum, s) =>
+      sum + ((state[catKey] && state[catKey][s]) ? state[catKey][s].length : 0), 0);
+    const subCount   = cat.subs.length;
  
-    const btn = document.createElement('button');
-    btn.className = `cat-btn${isOpen ? ' open active' : ''}`;
-    btn.innerHTML = `<span class="cat-dot" style="background:${cat.dot}"></span>${cat.label}<span class="cat-chevron">▶</span>`;
-    btn.onclick = () => toggleCat(catKey);
-    nav.appendChild(btn);
+    const catEl = document.createElement('div');
+    catEl.className = 'acc-cat';
  
-    const subNav = document.createElement('div');
-    subNav.className = `sub-nav${isOpen ? ' open' : ''}`;
-    for (const s of cat.subs) {
-      const sb = document.createElement('button');
-      sb.className = `sub-btn${(currentCat === catKey && currentSub === s) ? ' active' : ''}`;
-      sb.textContent = s;
-      sb.onclick = () => selectSub(catKey, s);
-      subNav.appendChild(sb);
-    }
-    nav.appendChild(subNav);
+    const badgeBg    = isOpen ? cat.dot + '22' : '#1e233300';
+    const badgeColor = isOpen ? cat.dot : '#4a5568';
+ 
+    catEl.innerHTML =
+      '<button class="acc-header' + (isOpen ? ' active' : '') + '" data-cat="' + catKey + '">' +
+        '<div class="acc-icon-wrap" style="background:' + cat.dot + '1a">' +
+          '<i class="ti ' + icon + '" style="color:' + cat.dot + ';font-size:15px" aria-hidden="true"></i>' +
+        '</div>' +
+        '<div class="acc-info">' +
+          '<div class="acc-name">' + cat.label + '</div>' +
+          '<div class="acc-meta">' + subCount + ' sub' + (subCount === 1 ? '' : 's') + '</div>' +
+        '</div>' +
+        '<span class="acc-badge" style="background:' + badgeBg + ';color:' + badgeColor + '">' + totalItems + '</span>' +
+        '<i class="ti ti-chevron-right acc-chevron' + (isOpen ? ' rotated' : '') + '" aria-hidden="true"></i>' +
+      '</button>' +
+      '<div class="acc-subs' + (isOpen ? ' open' : '') + '">' +
+        cat.subs.map(function(s) {
+          const count    = (state[catKey] && state[catKey][s]) ? state[catKey][s].length : 0;
+          const isActive = currentCat === catKey && currentSub === s;
+          const activeSt = isActive ? 'color:' + cat.dot + ';background:' + cat.dot + '14;' : '';
+          const dotColor = isActive ? cat.dot : '#2a3045';
+          return '<button class="acc-sub' + (isActive ? ' active' : '') + '" data-cat="' + catKey + '" data-sub="' + s + '" style="' + activeSt + '">' +
+            '<span class="acc-sub-dot" style="background:' + dotColor + '"></span>' +
+            s +
+            '<span class="acc-sub-count">' + count + '</span>' +
+          '</button>';
+        }).join('') +
+      '</div>';
+ 
+    catEl.querySelector('.acc-header').onclick = function() { toggleCat(this.dataset.cat); };
+    catEl.querySelectorAll('.acc-sub').forEach(function(btn) {
+      btn.onclick = function() { selectSub(this.dataset.cat, this.dataset.sub); };
+    });
+ 
+    nav.appendChild(catEl);
   }
 }
  

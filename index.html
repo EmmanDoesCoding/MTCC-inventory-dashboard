@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="cat-chemicals">
@@ -29,7 +30,7 @@
       </div>
       <div class="topbar-actions">
         <div style="position:relative;display:inline-flex;align-items:center">
-          <button class="btn btn-ghost" id="settingsBtn">⚙ Settings</button>
+          <button class="btn btn-ghost" id="settingsBtn"><i class="ti ti-settings" aria-hidden="true"></i> Settings</button>
           <!-- Green/red dot that lights up when Sheets is configured -->
           <span id="sheetsIndicator" title="Google Sheets sync" style="
             display:none;
@@ -39,9 +40,9 @@
             box-shadow:0 0 0 2px var(--bg);
           "></span>
         </div>
-        <button class="btn btn-ghost" id="importBtn"     style="display:none">⬆ Import</button>
+        <button class="btn btn-ghost" id="importBtn"     style="display:none"><i class="ti ti-upload" aria-hidden="true"></i> Import</button>
         <div style="position:relative;display:inline-flex" id="exportWrap">
-          <button class="btn btn-ghost" id="exportBtn" style="display:none" onclick="toggleExportMenu()">⬇ Export ▾</button>
+          <button class="btn btn-ghost" id="exportBtn" style="display:none" onclick="toggleExportMenu()"><i class="ti ti-download" aria-hidden="true"></i> Export <i class="ti ti-chevron-down" style="font-size:11px" aria-hidden="true"></i></button>
           <div id="exportMenu" style="
             display:none;position:absolute;top:calc(100% + 6px);right:0;
             background:var(--surface);border:1px solid var(--border);
@@ -65,8 +66,8 @@
             </button>
           </div>
         </div>
-        <button class="btn btn-ghost" id="sheetLinkBtn"  style="display:none">📊 Open Sheet</button>
-        <button class="btn btn-primary" id="addBtn"      style="display:none">＋ Add Item</button>
+        <button class="btn btn-ghost" id="sheetLinkBtn"  style="display:none"><i class="ti ti-table" aria-hidden="true"></i> Open Sheet</button>
+        <button class="btn btn-primary" id="addBtn"      style="display:none"><i class="ti ti-plus" aria-hidden="true"></i> Add Item</button>
       </div>
     </div>
     <div class="content" id="content">
@@ -187,7 +188,7 @@
   <div class="modal-overlay" id="importModal">
     <div class="modal" style="max-width:560px">
       <div class="modal-header">
-        <div class="modal-title" id="importModalTitle">⬆ Import Spreadsheet</div>
+        <div class="modal-title" id="importModalTitle"><i class="ti ti-upload" aria-hidden="true"></i> Import Spreadsheet</div>
         <button class="modal-close" onclick="closeImport()">✕</button>
       </div>
 
