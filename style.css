@@ -251,14 +251,18 @@ tbody td {
 tbody td:first-child {
   white-space: normal;
   word-break: break-word;
-  max-width: 200px;
-  min-width: 120px;
+  max-width: 160px;
+  min-width: 100px;
+}
+thead th.frozen {
+  max-width: 160px;
+  min-width: 100px;
 }
 tbody td.wrap-col {
   white-space: normal;
   word-break: break-word;
-  max-width: 260px;
-  min-width: 140px;
+  max-width: 220px;
+  min-width: 120px;
 }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface2); }
