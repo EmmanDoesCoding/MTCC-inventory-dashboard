@@ -244,7 +244,21 @@ tbody td {
   padding: 11px 14px;
   font-size: 13px; color: var(--text);
   border-bottom: 1px solid var(--border);
-  white-space: nowrap; vertical-align: middle;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+/* Name and Description columns wrap and have a max width */
+tbody td:first-child {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 200px;
+  min-width: 120px;
+}
+tbody td.wrap-col {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 260px;
+  min-width: 140px;
 }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface2); }

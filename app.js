@@ -190,17 +190,41 @@ async function saveData() {
 }
  
 // Push entire state to Google Sheets via Apps Script Web App.
-// We use a GET request with the payload as a URL parameter — this works
-// from any plain HTML/JS site without CORS issues. GAS doGet() receives it fine.
+// We use a hidden form POST — this bypasses both the GET URL length limit
+// (~8KB) and CORS restrictions. The form submits to the GAS URL in a
+// hidden iframe so the page doesn't navigate away.
 async function syncToSheets() {
   if (!SHEETS_URL) return;
   try {
-    const encoded = encodeURIComponent(JSON.stringify(state));
-    const url     = `${SHEETS_URL}?action=sync&data=${encoded}`;
-    // GET + no-cors: browser sends the request, GAS processes it.
-    // We can't read the response body (that's the no-cors trade-off)
-    // but the sheet still gets updated reliably.
-    await fetch(url, { method: 'GET', mode: 'no-cors' });
+    const payload = JSON.stringify({ action: 'sync', state });
+ 
+    // Create a hidden iframe to absorb the response (avoids page navigation)
+    let iframe = document.getElementById('__gasIframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id   = '__gasIframe';
+      iframe.name = '__gasIframe';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+ 
+    // Create a hidden form targeting that iframe
+    const form = document.createElement('form');
+    form.method  = 'POST';
+    form.action  = SHEETS_URL;
+    form.target  = '__gasIframe';
+    form.style.display = 'none';
+ 
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = 'payload';
+    input.value = payload;
+    form.appendChild(input);
+ 
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+ 
     setSheetsIndicator('synced');
   } catch (e) {
     setSheetsIndicator('error');
@@ -372,7 +396,10 @@ function renderContent() {
           if (val === undefined || val === null || val === '') val = '—';
           let disp = escHtml(String(val));
           if (f.type === 'select' && val !== '—') disp = badgeHtml(val);
-          return `<td${idx === 0 ? ' class="frozen"' : ''}>${disp}</td>`;
+          // Wrap long-text columns: name (frozen), description, remarks
+          const wrapKeys = ['description', 'remarks'];
+          let cls = idx === 0 ? 'frozen' : (wrapKeys.includes(f.key) ? 'wrap-col' : '');
+          return `<td${cls ? ` class="${cls}"` : ''}>${disp}</td>`;
         }).join('');
         return `<tr>
           ${cells}
@@ -706,32 +733,37 @@ function handleFile(file) {
       } else {
         const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
         // Find the sheet that best matches BOTH current category AND subcategory.
-        // e.g. for Chemicals > Alugbati we want "Alugbati-Chemicals" not "Alugbati-Glasswares"
-        const catLabel  = CATEGORIES[currentCat].label.toLowerCase();
-        const subLabel  = currentSub.toLowerCase().replace(/[^a-z0-9]/g, '');
-        // Category keywords to match (chemicals, consumables, glass, equip, semi, calib, chem)
-        const catWords  = catLabel.replace('semi-expandable','semi').replace('chemeng donation','chemeng')
-                            .split(/[^a-z]+/).filter(w => w.length > 3);
+        // Scoring: +3 sub match, +3 cat keyword match, +1 partial matches
+        const catLabel = CATEGORIES[currentCat].label.toLowerCase();
+        const subLabel = currentSub.toLowerCase().replace(/[^a-z0-9]/g, '');
+ 
+        // Build category keywords — map category keys to their sheet name keywords
+        const catKeywords = {
+          chemicals:       ['chemical','chem'],
+          consumables:     ['consumable','consum'],
+          semiExpandable:  ['semi','expandable','expendable'],
+          equipment:       ['equipment','equip'],
+          calibrators:     ['calibrat'],
+          chemEngDonation: ['donation','chemeng','chem eng'],
+          glassware:       ['glassware','glass'],
+        };
+        const catWords = catKeywords[currentCat] || [catLabel.substring(0,5)];
  
         let bestSheet = wb.SheetNames[0];
         let bestScore = -1;
         for (const sn of wb.SheetNames) {
           const snl = sn.toLowerCase().replace(/[^a-z0-9]/g, '');
           let score = 0;
-          // +2 if subcategory name appears in sheet name
-          if (snl.includes(subLabel)) score += 2;
-          // +2 for each category keyword found in sheet name
-          catWords.forEach(w => { if (snl.includes(w.substring(0,5))) score += 2; });
-          // Prefer exact matches
+          if (snl.includes(subLabel))                              score += 3;
+          else if (snl.includes(subLabel.substring(0, 4)))        score += 1;
+          catWords.forEach(w => {
+            const wn = w.replace(/[^a-z0-9]/g,'');
+            if (snl.includes(wn))                                  score += 3;
+            else if (snl.includes(wn.substring(0, 4)))            score += 1;
+          });
           if (score > bestScore) { bestScore = score; bestSheet = sn; }
         }
-        console.log('[Import] sheet scores:', wb.SheetNames.map(sn => {
-          const snl = sn.toLowerCase().replace(/[^a-z0-9]/g,'');
-          let s = 0;
-          if (snl.includes(subLabel)) s+=2;
-          catWords.forEach(w => { if(snl.includes(w.substring(0,5))) s+=2; });
-          return sn + ':' + s;
-        }), '→ picked:', bestSheet);
+        console.log('[Import] picked sheet:', bestSheet, '(score '+bestScore+')');
         const ws = wb.Sheets[bestSheet];
         rows = parseSheetWithHeaderDetection(ws);
       }
