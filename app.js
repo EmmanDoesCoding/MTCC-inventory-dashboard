@@ -742,8 +742,11 @@ function handleFile(file) {
 // then the real column headers on the next row — so we score every row
 // and pick the best match rather than stopping at the first partial match.
 function parseSheetWithHeaderDetection(ws) {
+  // raw:false keeps dates as strings; header:1 gives us plain 2D array
+  // We read twice: once raw for header detection, once formatted for data
   const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
   if (!raw.length) return [];
+  console.log('[Import] raw rows 0-3:', raw.slice(0,4));
  
   // All known field keywords from our schema + your exact sheet headers
   const knownHeaders = [
@@ -798,19 +801,65 @@ function parseCSV(text) {
   });
 }
  
-// Normalize a string for loose matching
+// Normalize a string for loose matching — strip non-breaking spaces,
+// punctuation, extra whitespace so 'No.of Sealed' === 'no of sealed'
 function norm(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  return String(s)
+    .replace(/\u00a0/g, ' ')   // non-breaking space
+    .replace(/\u200b/g, '')    // zero-width space
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')  // punctuation → space
+    .replace(/\s+/g, ' ')        // collapse spaces
+    .trim();
+}
+ 
+// Same normalization but keep dots for alias matching
+function normAlias(s) {
+  return String(s)
+    .replace(/\u00a0/g, ' ')
+    .replace(/\u200b/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 }
  
 // Build column map: our field key → matching file header (or null)
+// Uses multiple matching strategies in order of strictness
 function buildColMap(fileHeaders, catKey) {
   const fields = CATEGORIES[catKey].fields;
   const map    = {};
   for (const f of fields) {
     const aliases = IMPORT_ALIASES[f.key] || [f.label.toLowerCase()];
-    const match   = fileHeaders.find(h => aliases.some(a => norm(a) === norm(h)));
-    map[f.key]    = match || null;
+    let match = null;
+ 
+    // Strategy 1: exact match after full normalization (letters+digits+spaces only)
+    match = fileHeaders.find(h => aliases.some(a => norm(a) === norm(h)));
+ 
+    // Strategy 2: alias normalization keeping dots (catches 'no.of sealed')
+    if (!match) {
+      match = fileHeaders.find(h => {
+        const hn = normAlias(h);
+        return aliases.some(a => normAlias(a) === hn);
+      });
+    }
+ 
+    // Strategy 3: file header starts with alias (catches truncated headers)
+    if (!match) {
+      match = fileHeaders.find(h => {
+        const hn = norm(h);
+        return aliases.some(a => { const an = norm(a); return an.length > 3 && hn.startsWith(an); });
+      });
+    }
+ 
+    // Strategy 4: alias starts with file header (reverse of above)
+    if (!match) {
+      match = fileHeaders.find(h => {
+        const hn = norm(h);
+        return hn.length > 3 && aliases.some(a => norm(a).startsWith(hn));
+      });
+    }
+ 
+    map[f.key] = match || null;
   }
   return map;
 }
@@ -958,3 +1007,4 @@ function exportAllToExcel() {
   XLSX.writeFile(wb, filename);
   showToast(`Exported ${sheetCount} sheets to ${filename}`, 'success');
 }
+ 
