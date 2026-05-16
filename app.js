@@ -737,43 +737,52 @@ function handleFile(file) {
   }
 }
  
-// Detect the real header row by scanning top rows for known field keywords.
-// Your Excel files have a title row + blank row before real headers, so
-// we can't just blindly use row 0.
+// Detect the real header row by finding which row has the most keyword matches.
+// Your Excel sheets have a title row first (e.g. "ALUGBATI Chemicals"),
+// then the real column headers on the next row — so we score every row
+// and pick the best match rather than stopping at the first partial match.
 function parseSheetWithHeaderDetection(ws) {
-  // Convert to 2D array first (no header assumption)
   const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
   if (!raw.length) return [];
  
-  // Known header keywords to detect the real header row
+  // All known field keywords from our schema + your exact sheet headers
   const knownHeaders = [
     'item name','artcile/item','article/item','description','quantity',
-    'brand','status','remarks','supplier','unit value','expiration',
-    'no.of sealed','no. of sealed','no. of unsealed','no.of used',
-    'allocation','project','serial no','item no'
+    'brand','status','remarks','supplier','unit value, php','unit value',
+    'expiration date','expiration','no.of sealed','no. of sealed',
+    'no. of unsealed','no.of unsealed','no.of used','no. of used',
+    'allocation','project','serial no.','serial no','item no.','item no',
+    'old property','new property','unit of measure','brand/model'
   ];
  
-  let headerRowIdx = 0;
-  for (let i = 0; i < Math.min(raw.length, 8); i++) {
+  // Score each of the first 10 rows
+  let bestIdx = 0, bestScore = -1;
+  for (let i = 0; i < Math.min(raw.length, 10); i++) {
     const rowVals = raw[i].map(c => String(c).toLowerCase().trim());
-    const matches = rowVals.filter(v => knownHeaders.some(h => v.includes(h.substring(0,6)) && v.length < 40));
-    if (matches.length >= 2) {
-      headerRowIdx = i;
-      break;
-    }
+    // A cell scores if it matches any known header AND is short (not a paragraph)
+    const score = rowVals.filter(v =>
+      v.length > 0 && v.length < 50 &&
+      knownHeaders.some(h => v === h || v.startsWith(h.substring(0, 5)))
+    ).length;
+    if (score > bestScore) { bestScore = score; bestIdx = i; }
   }
  
-  const headers = raw[headerRowIdx].map(h => String(h).trim()).filter(h => h);
-  const dataRows = raw.slice(headerRowIdx + 1);
+  // Extract headers from best row, filtering out empty cells
+  const rawHeaders = raw[bestIdx];
+  const headers    = rawHeaders.map(h => String(h).trim());
  
-  // Convert to array of objects, skip fully empty rows
+  // Data starts on the row after the header
+  const dataRows = raw.slice(bestIdx + 1);
+ 
   return dataRows
     .map(row => {
       const obj = {};
-      headers.forEach((h, i) => { obj[h] = String(row[i] || '').trim(); });
+      headers.forEach((h, i) => {
+        if (h) obj[h] = String(row[i] || '').trim();
+      });
       return obj;
     })
-    .filter(row => Object.values(row).some(v => v && v !== ''));
+    .filter(row => Object.values(row).some(v => v && v !== '' && v !== '—'));
 }
  
 // Simple CSV parser
@@ -949,4 +958,3 @@ function exportAllToExcel() {
   XLSX.writeFile(wb, filename);
   showToast(`Exported ${sheetCount} sheets to ${filename}`, 'success');
 }
- 
