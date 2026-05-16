@@ -117,7 +117,7 @@ const CATEGORIES = {
     ]
   }
 };
-
+ 
 // ─── State ────────────────────────────────────────────────────────────────
 let state        = {};
 let currentCat   = null;
@@ -125,7 +125,7 @@ let currentSub   = null;
 let editIndex    = null;
 let deleteIndex  = null;
 let searchQ      = '';
-
+ 
 // ─── Default data structure for JsonBIN ───────────────────────────────────
 // JsonBIN requires non-empty JSON. This is the initial structure to paste.
 function buildEmpty() {
@@ -138,7 +138,7 @@ function buildEmpty() {
   }
   return s;
 }
-
+ 
 // ─── JsonBIN helpers ──────────────────────────────────────────────────────
 async function loadData() {
   if (!BIN_ID || !MASTER_KEY) {
@@ -164,7 +164,7 @@ async function loadData() {
     state = buildEmpty();
   }
 }
-
+ 
 async function saveData() {
   // ── 1. Save to JsonBIN ──
   if (!BIN_ID || !MASTER_KEY) {
@@ -184,11 +184,11 @@ async function saveData() {
       showToast('Could not save to JsonBIN. Check settings.', 'error');
     }
   }
-
+ 
   // ── 2. Sync to Google Sheets (fire-and-forget) ──
   syncToSheets();
 }
-
+ 
 // Push entire state to Google Sheets via Apps Script Web App.
 // We use a GET request with the payload as a URL parameter — this works
 // from any plain HTML/JS site without CORS issues. GAS doGet() receives it fine.
@@ -206,7 +206,7 @@ async function syncToSheets() {
     setSheetsIndicator('error');
   }
 }
-
+ 
 // Small indicator next to the settings button
 function setSheetsIndicator(status) {
   const el = document.getElementById('sheetsIndicator');
@@ -220,20 +220,20 @@ function setSheetsIndicator(status) {
   }
   el.style.display = 'block';
 }
-
+ 
 // ─── Nav ──────────────────────────────────────────────────────────────────
 function renderNav() {
   const nav = document.getElementById('nav');
   nav.innerHTML = '';
   for (const [catKey, cat] of Object.entries(CATEGORIES)) {
     const isOpen = currentCat === catKey;
-
+ 
     const btn = document.createElement('button');
     btn.className = `cat-btn${isOpen ? ' open active' : ''}`;
     btn.innerHTML = `<span class="cat-dot" style="background:${cat.dot}"></span>${cat.label}<span class="cat-chevron">▶</span>`;
     btn.onclick = () => toggleCat(catKey);
     nav.appendChild(btn);
-
+ 
     const subNav = document.createElement('div');
     subNav.className = `sub-nav${isOpen ? ' open' : ''}`;
     for (const s of cat.subs) {
@@ -246,7 +246,7 @@ function renderNav() {
     nav.appendChild(subNav);
   }
 }
-
+ 
 function toggleCat(catKey) {
   if (currentCat === catKey) {
     currentCat = null;
@@ -259,7 +259,7 @@ function toggleCat(catKey) {
   renderNav();
   renderContent();
 }
-
+ 
 function selectSub(catKey, sub) {
   currentCat = catKey;
   currentSub = sub;
@@ -268,17 +268,17 @@ function selectSub(catKey, sub) {
   renderNav();
   renderContent();
 }
-
+ 
 function applyCatTheme() {
   document.body.className = currentCat ? `cat-${currentCat}` : 'cat-chemicals';
 }
-
+ 
 // ─── Content ──────────────────────────────────────────────────────────────
 function renderContent() {
   const content    = document.getElementById('content');
   const addBtn     = document.getElementById('addBtn');
   const breadcrumb = document.getElementById('breadcrumb');
-
+ 
   if (!currentCat || !currentSub) {
     addBtn.style.display = 'none';
     document.getElementById('importBtn').style.display  = 'none';
@@ -304,25 +304,25 @@ function renderContent() {
     }
     return;
   }
-
+ 
   const cat    = CATEGORIES[currentCat];
   const fields = cat.fields;
   const items  = (state[currentCat] && state[currentCat][currentSub]) || [];
-
+ 
   breadcrumb.innerHTML = `${cat.label} <span class="breadcrumb-sep">›</span> <span>${currentSub}</span>`;
   addBtn.style.display = 'flex';
   document.getElementById('importBtn').style.display  = 'flex';
   document.getElementById('exportBtn').style.display  = 'flex';
   const slBtn = document.getElementById('sheetLinkBtn');
   slBtn.style.display = SHEET_LINK ? 'flex' : 'none';
-
+ 
   // Stats
   const total     = items.length;
   const available = items.filter(i => (i.status || '').toLowerCase() === 'available').length;
   const totalQty  = fields.find(f => f.key === 'quantity')
     ? items.reduce((a, i) => a + (+(i.quantity) || 0), 0)
     : null;
-
+ 
   const statsBar = `
     <div class="stats-bar">
       <div class="stat-card">
@@ -335,7 +335,7 @@ function renderContent() {
       </div>
       ${totalQty !== null ? `<div class="stat-card"><div class="stat-label">Total Qty</div><div class="stat-value">${totalQty}</div></div>` : ''}
     </div>`;
-
+ 
   // Setup banner if no credentials
   const banner = (!BIN_ID || !MASTER_KEY) ? `
     <div class="setup-banner">
@@ -349,19 +349,19 @@ function renderContent() {
         <button class="btn btn-primary" onclick="openSettings()" style="margin-top:12px">⚙ Open Settings</button>
       </div>
     </div>` : '';
-
+ 
   // Filter
   const filtered = searchQ
     ? items.filter(i => fields.some(f =>
         (i[f.key] || '').toString().toLowerCase().includes(searchQ.toLowerCase())
       ))
     : items;
-
+ 
   // Headers
   const headers = fields.map((f, idx) =>
     `<th${idx === 0 ? ' class="frozen"' : ''}>${f.label}</th>`
   ).join('') + '<th style="width:90px">Actions</th>';
-
+ 
   // Rows
   const rows = filtered.length === 0
     ? `<tr class="empty-row"><td colspan="${fields.length + 1}">No items yet. Click "＋ Add Item" to get started.</td></tr>`
@@ -382,7 +382,7 @@ function renderContent() {
           </div></td>
         </tr>`;
       }).join('');
-
+ 
   content.innerHTML = `
     ${banner}
     ${statsBar}
@@ -405,7 +405,7 @@ function renderContent() {
       </div>
     </div>`;
 }
-
+ 
 function badgeHtml(val) {
   const map = {
     'Available':       'available',
@@ -421,7 +421,7 @@ function badgeHtml(val) {
   const cls = map[val] || 'none';
   return `<span class="badge badge-${cls}">${escHtml(val)}</span>`;
 }
-
+ 
 function escHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -429,14 +429,14 @@ function escHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-
+ 
 function onSearch(v) {
   searchQ = v;
   renderContent();
   const inp = document.getElementById('searchInput');
   if (inp) { inp.focus(); inp.setSelectionRange(v.length, v.length); }
 }
-
+ 
 // ─── Add / Edit Modal ─────────────────────────────────────────────────────
 function openAddModal() {
   editIndex = null;
@@ -446,7 +446,7 @@ function openAddModal() {
   buildForm({});
   document.getElementById('itemModal').classList.add('open');
 }
-
+ 
 function editItem(idx) {
   editIndex = idx;
   const item = state[currentCat][currentSub][idx];
@@ -455,7 +455,7 @@ function editItem(idx) {
   buildForm(item);
   document.getElementById('itemModal').classList.add('open');
 }
-
+ 
 function buildForm(data) {
   const fields = CATEGORIES[currentCat].fields;
   document.getElementById('modalForm').innerHTML = fields.map(f => {
@@ -478,7 +478,7 @@ function buildForm(data) {
     </div>`;
   }).join('');
 }
-
+ 
 function saveItem() {
   const fields = CATEGORIES[currentCat].fields;
   const form   = document.getElementById('modalForm');
@@ -491,10 +491,10 @@ function saveItem() {
     showToast('Item Name is required.', 'error');
     return;
   }
-
+ 
   if (!state[currentCat]) state[currentCat] = {};
   if (!state[currentCat][currentSub]) state[currentCat][currentSub] = [];
-
+ 
   if (editIndex !== null) {
     state[currentCat][currentSub][editIndex] = item;
     showToast('Item updated successfully.', 'success');
@@ -502,17 +502,17 @@ function saveItem() {
     state[currentCat][currentSub].push(item);
     showToast('Item added successfully.', 'success');
   }
-
+ 
   saveData();
   closeModal();
   renderContent();
 }
-
+ 
 function closeModal() {
   document.getElementById('itemModal').classList.remove('open');
   editIndex = null;
 }
-
+ 
 // ─── Delete ───────────────────────────────────────────────────────────────
 function promptDelete(idx) {
   deleteIndex = idx;
@@ -520,12 +520,12 @@ function promptDelete(idx) {
   document.getElementById('deleteItemName').textContent = name;
   document.getElementById('confirmModal').classList.add('open');
 }
-
+ 
 function closeConfirm() {
   document.getElementById('confirmModal').classList.remove('open');
   deleteIndex = null;
 }
-
+ 
 function confirmDelete() {
   if (deleteIndex === null) return;
   state[currentCat][currentSub].splice(deleteIndex, 1);
@@ -534,7 +534,7 @@ function confirmDelete() {
   closeConfirm();
   renderContent();
 }
-
+ 
 // ─── Settings ─────────────────────────────────────────────────────────────
 function openSettings() {
   document.getElementById('cfg-key').value       = MASTER_KEY;
@@ -543,11 +543,11 @@ function openSettings() {
   document.getElementById('cfg-sheetlink').value = SHEET_LINK;
   document.getElementById('settingsModal').classList.add('open');
 }
-
+ 
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('open');
 }
-
+ 
 async function saveSettings() {
   MASTER_KEY  = document.getElementById('cfg-key').value.trim();
   BIN_ID      = document.getElementById('cfg-bin').value.trim();
@@ -557,22 +557,22 @@ async function saveSettings() {
   localStorage.setItem('mtcc_bin',        BIN_ID);
   localStorage.setItem('mtcc_sheets_url', SHEETS_URL);
   localStorage.setItem('mtcc_sheet_link', SHEET_LINK);
-
+ 
   // Show/hide the sheets indicator dot
   const ind = document.getElementById('sheetsIndicator');
   if (ind) ind.style.display = SHEETS_URL ? 'block' : 'none';
-
+ 
   closeSettings();
   document.getElementById('content').innerHTML =
     '<div class="loading"><div class="spinner"></div>Loading from JsonBIN…</div>';
   await loadData();
   renderContent();
   showToast('Settings saved!', 'success');
-
+ 
   // Trigger an immediate sync so the sheet is up to date right away
   if (SHEETS_URL) syncToSheets();
 }
-
+ 
 // ─── Toast ────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
   const c = document.getElementById('toastContainer');
@@ -582,7 +582,7 @@ function showToast(msg, type = 'success') {
   c.appendChild(t);
   setTimeout(() => t.remove(), 3200);
 }
-
+ 
 // ─── Event wiring ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addBtn').onclick      = openAddModal;
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('exportBtn').onclick   = exportToExcel;
   document.getElementById('sheetLinkBtn').onclick = openSheetLink;
   document.getElementById('settingsBtn').onclick  = openSettings;
-
+ 
   ['itemModal', 'confirmModal', 'settingsModal', 'importModal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function (e) {
       if (e.target !== this) return;
@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (id === 'importModal')  closeImport();
     });
   });
-
+ 
   // Boot
   (async () => {
     if (BIN_ID && MASTER_KEY) {
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderContent();
   })();
 });
-
+ 
 // ─── Import ───────────────────────────────────────────────────────────────
 // Column header aliases: maps common spreadsheet headers → our field keys.
 // Matching is case-insensitive and ignores punctuation/spaces.
@@ -645,11 +645,11 @@ const IMPORT_ALIASES = {
   remarks:      ['remarks','notes','note','comment','comments'],
   project:      ['project'],
 };
-
+ 
 let importParsedRows  = [];   // raw rows from file [{colHeader: value}, ...]
 let importMappedItems = [];   // mapped to our field keys
 let importColMap      = {};   // { ourKey: fileHeader }
-
+ 
 function openImport() {
   // Reset state
   importParsedRows  = [];
@@ -667,11 +667,11 @@ function openImport() {
     `⬆ Import into ${CATEGORIES[currentCat].label} › ${currentSub}`;
   document.getElementById('importModal').classList.add('open');
 }
-
+ 
 function closeImport() {
   document.getElementById('importModal').classList.remove('open');
 }
-
+ 
 // Drag-and-drop handlers
 function onDragOver(e) {
   e.preventDefault();
@@ -689,7 +689,7 @@ function onDrop(e) {
 function onFileSelected(input) {
   if (input.files[0]) handleFile(input.files[0]);
 }
-
+ 
 function handleFile(file) {
   const name = file.name.toLowerCase();
   if (!name.endsWith('.xlsx') && !name.endsWith('.csv')) {
@@ -704,10 +704,20 @@ function handleFile(file) {
       if (name.endsWith('.csv')) {
         rows = parseCSV(e.target.result);
       } else {
-        const wb   = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
-        // Use the first sheet that has data
-        const ws   = wb.Sheets[wb.SheetNames[0]];
-        rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+        const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
+        // Try to find the right sheet — prefer one matching the current category/sub
+        const catLabel = CATEGORIES[currentCat].label.toLowerCase();
+        const subLabel = currentSub.toLowerCase();
+        let sheetName  = wb.SheetNames[0]; // default: first sheet
+        for (const sn of wb.SheetNames) {
+          const snl = sn.toLowerCase();
+          if (snl.includes(subLabel) && snl.includes(catLabel.substring(0, 4))) {
+            sheetName = sn; break;
+          }
+          if (snl.includes(subLabel)) { sheetName = sn; break; }
+        }
+        const ws = wb.Sheets[sheetName];
+        rows = parseSheetWithHeaderDetection(ws);
       }
       if (!rows.length) {
         showToast('File appears empty or unreadable.', 'error');
@@ -726,7 +736,46 @@ function handleFile(file) {
     reader.readAsBinaryString(file);
   }
 }
-
+ 
+// Detect the real header row by scanning top rows for known field keywords.
+// Your Excel files have a title row + blank row before real headers, so
+// we can't just blindly use row 0.
+function parseSheetWithHeaderDetection(ws) {
+  // Convert to 2D array first (no header assumption)
+  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+  if (!raw.length) return [];
+ 
+  // Known header keywords to detect the real header row
+  const knownHeaders = [
+    'item name','artcile/item','article/item','description','quantity',
+    'brand','status','remarks','supplier','unit value','expiration',
+    'no.of sealed','no. of sealed','no. of unsealed','no.of used',
+    'allocation','project','serial no','item no'
+  ];
+ 
+  let headerRowIdx = 0;
+  for (let i = 0; i < Math.min(raw.length, 8); i++) {
+    const rowVals = raw[i].map(c => String(c).toLowerCase().trim());
+    const matches = rowVals.filter(v => knownHeaders.some(h => v.includes(h.substring(0,6)) && v.length < 40));
+    if (matches.length >= 2) {
+      headerRowIdx = i;
+      break;
+    }
+  }
+ 
+  const headers = raw[headerRowIdx].map(h => String(h).trim()).filter(h => h);
+  const dataRows = raw.slice(headerRowIdx + 1);
+ 
+  // Convert to array of objects, skip fully empty rows
+  return dataRows
+    .map(row => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = String(row[i] || '').trim(); });
+      return obj;
+    })
+    .filter(row => Object.values(row).some(v => v && v !== ''));
+}
+ 
 // Simple CSV parser
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
@@ -739,12 +788,12 @@ function parseCSV(text) {
     return obj;
   });
 }
-
+ 
 // Normalize a string for loose matching
 function norm(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 }
-
+ 
 // Build column map: our field key → matching file header (or null)
 function buildColMap(fileHeaders, catKey) {
   const fields = CATEGORIES[catKey].fields;
@@ -756,13 +805,13 @@ function buildColMap(fileHeaders, catKey) {
   }
   return map;
 }
-
+ 
 function importNext() {
   if (!importParsedRows.length) return;
   const fileHeaders = Object.keys(importParsedRows[0]);
   importColMap      = buildColMap(fileHeaders, currentCat);
   const fields      = CATEGORIES[currentCat].fields;
-
+ 
   // Map rows → items
   importMappedItems = importParsedRows.map(row => {
     const item = {};
@@ -772,7 +821,7 @@ function importNext() {
     }
     return item;
   }).filter(item => item.name); // skip rows with no Item Name
-
+ 
   // Build mapping table HTML
   const mappingRows = fields.map(f => {
     const header  = importColMap[f.key];
@@ -783,7 +832,7 @@ function importNext() {
       <span class="${matched ? 'mapping-field' : 'mapping-skip'}">${f.label}</span>
     </div>`;
   }).join('');
-
+ 
   document.getElementById('mappingTable').innerHTML = mappingRows;
   document.getElementById('importSummary').innerHTML =
     `<strong style="color:var(--active)">${importMappedItems.length}</strong> items ready to import` +
@@ -791,7 +840,7 @@ function importNext() {
     `<span style="color:var(--muted)">${fields.filter(f=>importColMap[f.key]).length} of ${fields.length} fields matched automatically.</span>`;
   document.getElementById('importTargetLabel').textContent =
     `${CATEGORIES[currentCat].label} › ${currentSub}`;
-
+ 
   // Switch to step 2
   document.getElementById('importStep1').style.display = 'none';
   document.getElementById('importStep2').style.display = 'block';
@@ -799,7 +848,7 @@ function importNext() {
   document.getElementById('importConfirmBtn').style.display = 'inline-flex';
   document.getElementById('importBackBtn').style.display = 'inline-flex';
 }
-
+ 
 function importGoBack() {
   document.getElementById('importStep1').style.display = 'block';
   document.getElementById('importStep2').style.display = 'none';
@@ -807,7 +856,7 @@ function importGoBack() {
   document.getElementById('importConfirmBtn').style.display = 'none';
   document.getElementById('importBackBtn').style.display = 'none';
 }
-
+ 
 async function confirmImport() {
   if (!importMappedItems.length) {
     showToast('No valid items to import.', 'error');
@@ -815,13 +864,13 @@ async function confirmImport() {
   }
   if (!state[currentCat]) state[currentCat] = {};
   state[currentCat][currentSub] = importMappedItems;
-
+ 
   closeImport();
   await saveData();
   renderContent();
   showToast(`Imported ${importMappedItems.length} items into ${CATEGORIES[currentCat].label} › ${currentSub}!`, 'success');
 }
-
+ 
 // ─── Open Google Sheet link ───────────────────────────────────────────────
 function openSheetLink() {
   if (!SHEET_LINK) {
@@ -830,15 +879,15 @@ function openSheetLink() {
   }
   window.open(SHEET_LINK, '_blank');
 }
-
+ 
 // ─── Export current view to Excel (.xlsx) ────────────────────────────────
 function exportToExcel() {
   if (!currentCat || !currentSub) return;
-
+ 
   const cat    = CATEGORIES[currentCat];
   const fields = cat.fields;
   const items  = (state[currentCat] && state[currentCat][currentSub]) || [];
-
+ 
   // Build worksheet data: header row + data rows
   const headers = fields.map(f => f.label);
   const rows    = items.map(item =>
@@ -847,34 +896,34 @@ function exportToExcel() {
       return (v === undefined || v === null || v === '') ? '—' : v;
     })
   );
-
+ 
   const wsData = [headers, ...rows];
   const ws     = XLSX.utils.aoa_to_sheet(wsData);
-
+ 
   // Column widths
   ws['!cols'] = headers.map(() => ({ wch: 20 }));
-
+ 
   // Workbook
   const wb       = XLSX.utils.book_new();
   const tabName  = `${cat.label} - ${currentSub}`.substring(0, 31); // Excel tab limit
   XLSX.utils.book_append_sheet(wb, ws, tabName);
-
+ 
   const filename = `MTCC_${cat.label}_${currentSub}_${new Date().toISOString().slice(0,10)}.xlsx`;
   XLSX.writeFile(wb, filename);
   showToast(`Exported ${items.length} items to ${filename}`, 'success');
 }
-
+ 
 // ─── Export ALL categories to a single Excel workbook ────────────────────
 function exportAllToExcel() {
   const wb = XLSX.utils.book_new();
   let sheetCount = 0;
-
+ 
   for (const [catKey, cat] of Object.entries(CATEGORIES)) {
     const fields = cat.fields;
     for (const sub of cat.subs) {
       const items = (state[catKey] && state[catKey][sub]) || [];
       if (!items.length) continue; // skip empty tabs
-
+ 
       const headers = fields.map(f => f.label);
       const rows    = items.map(item =>
         fields.map(f => {
@@ -882,7 +931,7 @@ function exportAllToExcel() {
           return (v === undefined || v === null || v === '') ? '—' : v;
         })
       );
-
+ 
       const ws      = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws['!cols']   = headers.map(() => ({ wch: 18 }));
       const tabName = `${cat.label} - ${sub}`.substring(0, 31);
@@ -890,13 +939,14 @@ function exportAllToExcel() {
       sheetCount++;
     }
   }
-
+ 
   if (!sheetCount) {
     showToast('No data to export yet.', 'error');
     return;
   }
-
+ 
   const filename = `MTCC_Inventory_Full_${new Date().toISOString().slice(0,10)}.xlsx`;
   XLSX.writeFile(wb, filename);
   showToast(`Exported ${sheetCount} sheets to ${filename}`, 'success');
 }
+ 
