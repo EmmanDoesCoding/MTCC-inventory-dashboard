@@ -39,7 +39,34 @@
             box-shadow:0 0 0 2px var(--bg);
           "></span>
         </div>
-        <button class="btn btn-primary" id="addBtn" style="display:none">＋ Add Item</button>
+        <button class="btn btn-ghost" id="importBtn"     style="display:none">⬆ Import</button>
+        <div style="position:relative;display:inline-flex" id="exportWrap">
+          <button class="btn btn-ghost" id="exportBtn" style="display:none" onclick="toggleExportMenu()">⬇ Export ▾</button>
+          <div id="exportMenu" style="
+            display:none;position:absolute;top:calc(100% + 6px);right:0;
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:var(--radius);box-shadow:var(--shadow);
+            min-width:180px;z-index:150;overflow:hidden;
+          ">
+            <button onclick="exportToExcel();toggleExportMenu()" style="
+              display:block;width:100%;text-align:left;padding:10px 16px;
+              background:transparent;border:none;color:var(--text);
+              font-family:var(--font);font-size:13px;cursor:pointer;
+            " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📄 This tab only
+            </button>
+            <button onclick="exportAllToExcel();toggleExportMenu()" style="
+              display:block;width:100%;text-align:left;padding:10px 16px;
+              background:transparent;border:none;color:var(--text);
+              font-family:var(--font);font-size:13px;cursor:pointer;
+              border-top:1px solid var(--border);
+            " onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📦 Full inventory (all tabs)
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="sheetLinkBtn"  style="display:none">📊 Open Sheet</button>
+        <button class="btn btn-primary" id="addBtn"      style="display:none">＋ Add Item</button>
       </div>
     </div>
     <div class="content" id="content">
@@ -144,6 +171,10 @@
         <label>Web App URL</label>
         <input class="form-input" id="cfg-sheets" placeholder="https://script.google.com/macros/s/…/exec" />
       </div>
+      <div class="settings-row">
+        <label>Sheet URL</label>
+        <input class="form-input" id="cfg-sheetlink" placeholder="https://docs.google.com/spreadsheets/d/…" />
+      </div>
 
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
@@ -152,6 +183,76 @@
     </div>
   </div>
 
+  <!-- ── Import Modal ── -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <div class="modal-title" id="importModalTitle">⬆ Import Spreadsheet</div>
+        <button class="modal-close" onclick="closeImport()">✕</button>
+      </div>
+
+      <!-- Step 1: File pick -->
+      <div id="importStep1">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7">
+          Upload an <strong style="color:var(--text)">.xlsx</strong> or <strong style="color:var(--text)">.csv</strong> file.
+          The app will try to automatically match your column headers to the correct fields.
+          Unrecognized columns are safely ignored.
+        </p>
+
+        <!-- Drop zone -->
+        <div id="dropZone" style="
+          border: 2px dashed var(--border); border-radius: 10px;
+          padding: 36px 24px; text-align: center; cursor: pointer;
+          transition: border-color .18s, background .18s;
+          margin-bottom: 16px;
+        " onclick="document.getElementById('fileInput').click()"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <div style="font-size:32px;margin-bottom:8px">📂</div>
+          <div style="font-size:13px;color:var(--muted)">
+            Drop your file here, or <span style="color:var(--active);font-weight:600">click to browse</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;opacity:.6">.xlsx or .csv</div>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.csv" style="display:none" onchange="onFileSelected(this)" />
+        <div id="importFileName" style="font-size:12px;color:var(--muted);text-align:center;min-height:18px"></div>
+      </div>
+
+      <!-- Step 2: Preview & confirm -->
+      <div id="importStep2" style="display:none">
+        <div id="importSummary" style="
+          background:var(--surface2);border:1px solid var(--border);
+          border-radius:8px;padding:14px 16px;margin-bottom:14px;
+          font-size:13px;line-height:1.8;
+        "></div>
+
+        <!-- Column mapping preview -->
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">
+          Column Mapping
+        </div>
+        <div id="mappingTable" style="
+          background:var(--surface2);border:1px solid var(--border);
+          border-radius:8px;overflow:hidden;margin-bottom:16px;
+          font-size:12px;max-height:220px;overflow-y:auto;
+        "></div>
+
+        <p style="font-size:12px;color:var(--muted);line-height:1.6">
+          ⚠ This will <strong style="color:var(--text)">replace</strong> all existing items in
+          <strong id="importTargetLabel" style="color:var(--active)"></strong>.
+          Make sure the preview looks correct before confirming.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeImport()">Cancel</button>
+        <button class="btn btn-ghost" id="importBackBtn" onclick="importGoBack()" style="display:none">← Back</button>
+        <button class="btn btn-primary" id="importNextBtn" onclick="importNext()" disabled>Next →</button>
+        <button class="btn btn-primary" id="importConfirmBtn" onclick="confirmImport()" style="display:none">✓ Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="app.js"></script>
   <script>
     // Populate the initial JSON preview once app.js is loaded
@@ -173,6 +274,20 @@
         showToast('Initial JSON copied to clipboard!', 'success');
       });
     }
+
+    function toggleExportMenu() {
+      const m = document.getElementById('exportMenu');
+      m.style.display = m.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close export menu when clicking outside
+    document.addEventListener('click', e => {
+      const wrap = document.getElementById('exportWrap');
+      if (wrap && !wrap.contains(e.target)) {
+        const m = document.getElementById('exportMenu');
+        if (m) m.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>

@@ -22,6 +22,9 @@
   --blue:      #60a5fa;
   --blue-dim:  #1e3a5f;
   --blue-bg:   #071d36;
+  --teal:      #2dd4bf;
+  --teal-dim:  #134e4a;
+  --teal-bg:   #021917;
   --red:       #f87171;
   --radius:    10px;
   --font:      'DM Sans', sans-serif;
@@ -45,7 +48,9 @@ body.cat-chemicals   { --active: var(--green);  --active-dim: var(--green-dim); 
 body.cat-consumables { --active: var(--orange); --active-dim: var(--orange-dim); --active-bg: var(--orange-bg); }
 body.cat-equipment   { --active: var(--purple); --active-dim: var(--purple-dim); --active-bg: var(--purple-bg); }
 body.cat-glassware      { --active: var(--blue);   --active-dim: var(--blue-dim);   --active-bg: var(--blue-bg);   }
-body.cat-semiExpandable { --active: var(--amber);  --active-dim: var(--amber-dim);  --active-bg: var(--amber-bg);  }
+body.cat-semiExpandable  { --active: var(--amber);  --active-dim: var(--amber-dim);  --active-bg: var(--amber-bg);  }
+body.cat-calibrators     { --active: #c084fc;      --active-dim: #581c87;          --active-bg: #1a0533;          }
+body.cat-chemEngDonation { --active: var(--teal);   --active-dim: var(--teal-dim);  --active-bg: var(--teal-bg);   }
 
 /* ── Sidebar ── */
 .sidebar {
@@ -391,3 +396,24 @@ tbody tr:hover .row-actions { opacity: 1; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Import drop zone ── */
+#dropZone:hover, #dropZone.drag-over {
+  border-color: var(--active);
+  background: var(--active-bg);
+}
+.mapping-row {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.mapping-row:last-child { border-bottom: none; }
+.mapping-row.matched { color: var(--text); }
+.mapping-row.skipped { color: var(--muted); opacity: .5; }
+.mapping-arrow { text-align: center; color: var(--muted); }
+.mapping-field { color: var(--active); font-weight: 600; }
+.mapping-skip  { color: var(--muted); font-style: italic; }
